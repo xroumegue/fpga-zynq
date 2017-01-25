@@ -1,4 +1,6 @@
-open_project BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE/BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE.xpr
+variable project BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE
+
+open_project $project/$project.xpr
 reset_run synth_1
 reset_run impl_1
 launch_runs synth_1
