@@ -65,6 +65,11 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
+hwdef = $(proj_name)/$(proj_name).runs/impl_1/rocketchip_wrapper.hwdef
+src/tcl/make_fsbl_$(CONFIG).tcl: $(common)/make_fsbl.tcl
+	sed 's/PROJ_NAME/$(proj_name)/g' \
+		$(common)/make_fsbl.tcl > src/tcl/make_fsbl_$(CONFIG).tcl
+
 $(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cd $(ROCKET_DIR) && $(SBT) pack
 	mkdir -p $(common)/lib
@@ -106,6 +111,19 @@ $(bitstream): src/tcl/make_bitstream_$(CONFIG).tcl $(verilog_srcs) src/constrs/b
 bitstream: $(bitstream)
 
 
+$(hwdef): $(bitstream)
+
+fsbl_src = src/fsbl
+fsbl_elf = $(fsbl_src)/fsbl.elf
+
+$(fsbl_src) : $(hwdef) src/tcl/make_fsbl_$(CONFIG).tcl
+	hsi -mode batch -source src/tcl/make_fsbl_$(CONFIG).tcl
+
+$(fsbl_elf) : $(fsbl_src)
+	make -C src/fsbl CFLAGS=-DFSBL_DEBUG_INFO
+	cp src/fsbl/executable.elf $@
+
+fsbl: $(fsbl_elf)
 
 # Platform software generation
 # ------------------------------------------------------------------------------
